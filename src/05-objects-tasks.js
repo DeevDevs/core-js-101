@@ -6,7 +6,6 @@
  *                                                                                                *
  ************************************************************************************************ */
 
-
 /**
  * Returns the rectangle object with width and height parameters and getArea() method
  *
@@ -20,10 +19,16 @@
  *    console.log(r.height);      // => 20
  *    console.log(r.getArea());   // => 200
  */
-function Rectangle(/* width, height */) {
-  throw new Error('Not implemented');
+function Rectangle(width, height) {
+  const obj = {
+    width,
+    height,
+    getArea() {
+      return this.width * this.height;
+    },
+  };
+  return obj;
 }
-
 
 /**
  * Returns the JSON representation of specified object
@@ -35,10 +40,9 @@ function Rectangle(/* width, height */) {
  *    [1,2,3]   =>  '[1,2,3]'
  *    { width: 10, height : 20 } => '{"height":10,"width":20}'
  */
-function getJSON(/* obj */) {
-  throw new Error('Not implemented');
+function getJSON(obj) {
+  return JSON.stringify(obj);
 }
-
 
 /**
  * Returns the object of specified type from JSON representation
@@ -51,10 +55,10 @@ function getJSON(/* obj */) {
  *    const r = fromJSON(Circle.prototype, '{"radius":10}');
  *
  */
-function fromJSON(/* proto, json */) {
-  throw new Error('Not implemented');
+function fromJSON(proto, json) {
+  const obj = JSON.parse(json);
+  return Object.setPrototypeOf(obj, proto);
 }
-
 
 /**
  * Css selectors builder
@@ -110,36 +114,171 @@ function fromJSON(/* proto, json */) {
  *  For more examples see unit tests.
  */
 
-const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
-  },
+class Builder {
+  constructor() {
+    this.builtString = '';
+    this.existingSelectors = [];
+  }
 
-  id(/* value */) {
-    throw new Error('Not implemented');
-  },
+  isIncorrectOrder(str, arr) {
+    this.filler = 'filler';
+    let value;
+    if (str === 'element') {
+      value = (arr.indexOf('id') >= 0
+          && arr.indexOf('id') < arr.indexOf('element'))
+        || (arr.indexOf('class') >= 0
+          && arr.indexOf('class') < arr.indexOf('element'))
+        || (arr.indexOf('attr') >= 0
+          && arr.indexOf('attr') < arr.indexOf('element'))
+        || (arr.indexOf('pseudoClass') >= 0
+          && arr.indexOf('pseudoClass') < arr.indexOf('element'))
+        || (arr.indexOf('pseudoElement') >= 0
+          && arr.indexOf('pseudoElement') < arr.indexOf('element'));
+    }
+    if (str === 'id') {
+      value = (arr.indexOf('class') >= 0
+          && arr.indexOf('class') < arr.indexOf('id'))
+        || (arr.indexOf('attr') >= 0 && arr.indexOf('attr') < arr.indexOf('id'))
+        || (arr.indexOf('pseudoClass') >= 0
+          && arr.indexOf('pseudoClass') < arr.indexOf('id'))
+        || (arr.indexOf('pseudoElement') >= 0
+          && arr.indexOf('pseudoElement') < arr.indexOf('id'));
+    }
+    if (str === 'class') {
+      value = (arr.indexOf('attr') >= 0
+          && arr.indexOf('attr') < arr.indexOf('class'))
+        || (arr.indexOf('pseudoClass') >= 0
+          && arr.indexOf('pseudoClass') < arr.indexOf('class'))
+        || (arr.indexOf('pseudoElement') >= 0
+          && arr.indexOf('pseudoElement') < arr.indexOf('class'));
+    }
+    if (str === 'attr') {
+      value = (arr.indexOf('pseudoClass') >= 0
+          && arr.indexOf('pseudoClass') < arr.indexOf('attr'))
+        || (arr.indexOf('pseudoElement') >= 0
+          && arr.indexOf('pseudoElement') < arr.indexOf('attr'));
+    }
+    if (str === 'pseudoClass') {
+      value = arr.indexOf('pseudoElement') >= 0
+        && arr.indexOf('pseudoElement') < arr.indexOf('pseudoClass');
+    }
+    return value;
+  }
 
-  class(/* value */) {
-    throw new Error('Not implemented');
-  },
+  element(value) {
+    const passedValue = this.builtString;
+    const { existingSelectors } = this;
+    if (existingSelectors.indexOf('element') >= 0) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector',
+      );
+    }
+    const toPass = new Builder();
+    toPass.builtString = `${
+      passedValue.length > 0 ? `${passedValue} ` : ''
+    }${value}`;
+    toPass.existingSelectors = existingSelectors.concat(['element']);
+    if (this.isIncorrectOrder('element', toPass.existingSelectors)) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
+      );
+    }
+    return toPass;
+  }
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
-  },
+  id(value) {
+    const passedValue = this.builtString;
+    const { existingSelectors } = this;
+    if (existingSelectors.indexOf('id') >= 0) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector',
+      );
+    }
+    const toPass = new Builder();
+    toPass.builtString = `${passedValue}#${value}`;
+    toPass.existingSelectors = existingSelectors.concat(['id']);
+    if (this.isIncorrectOrder('id', toPass.existingSelectors)) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
+      );
+    }
+    return toPass;
+  }
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
-  },
+  class(value) {
+    const passedValue = this.builtString;
+    const { existingSelectors } = this;
+    const toPass = new Builder();
+    toPass.builtString = `${passedValue}.${value}`;
+    toPass.existingSelectors = existingSelectors.concat(['class']);
+    if (this.isIncorrectOrder('class', toPass.existingSelectors)) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
+      );
+    }
+    return toPass;
+  }
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
-  },
+  attr(value) {
+    const passedValue = this.builtString;
+    const { existingSelectors } = this;
+    const toPass = new Builder();
+    toPass.builtString = `${passedValue}[${value}]`;
+    toPass.existingSelectors = existingSelectors.concat(['attr']);
+    if (this.isIncorrectOrder('attr', toPass.existingSelectors)) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
+      );
+    }
+    return toPass;
+  }
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
-  },
-};
+  pseudoClass(value) {
+    const passedValue = this.builtString;
+    const { existingSelectors } = this;
+    const toPass = new Builder();
+    toPass.builtString = `${passedValue}:${value}`;
+    toPass.existingSelectors = existingSelectors.concat(['pseudoClass']);
+    if (this.isIncorrectOrder('pseudoClass', toPass.existingSelectors)) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
+      );
+    }
+    return toPass;
+  }
 
+  pseudoElement(value) {
+    const passedValue = this.builtString;
+    const { existingSelectors } = this;
+    if (existingSelectors.indexOf('pseudoElement') >= 0) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector',
+      );
+    }
+    const toPass = new Builder();
+    toPass.builtString = `${passedValue}::${value}`;
+    toPass.existingSelectors = existingSelectors.concat(['pseudoElement']);
+    if (this.isIncorrectOrder('pseudoElement', toPass.existingSelectors)) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
+      );
+    }
+    return toPass;
+  }
+
+  combine(selector1, combinator, selector2) {
+    const thisBuilt = this.builtString;
+    const toPass = new Builder();
+    toPass.builtString = `${thisBuilt}${selector1.builtString} ${combinator} ${selector2.builtString}`;
+    return toPass;
+  }
+
+  stringify() {
+    return this.builtString;
+  }
+}
+
+const cssSelectorBuilder = new Builder();
 
 module.exports = {
   Rectangle,
