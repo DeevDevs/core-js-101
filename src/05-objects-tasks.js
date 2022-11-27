@@ -165,105 +165,62 @@ class Builder {
     return value;
   }
 
-  element(value) {
-    const passedValue = this.builtString;
-    const { existingSelectors } = this;
-    if (existingSelectors.indexOf('element') >= 0) {
-      throw new Error(
-        'Element, id and pseudo-element should not occur more then one time inside the selector',
-      );
+  createCheckSelector(obj, value, string) {
+    this.filler = 'filler';
+    const passedValue = obj.builtString;
+    const { existingSelectors } = obj;
+    if (
+      string === 'element'
+      || string === 'id'
+      || string === 'pseudoElement'
+    ) {
+      if (existingSelectors.indexOf(string) >= 0) {
+        throw new Error(
+          'Element, id and pseudo-element should not occur more then one time inside the selector',
+        );
+      }
     }
     const toPass = new Builder();
     toPass.builtString = `${
-      passedValue.length > 0 ? `${passedValue} ` : ''
+      passedValue.length > 0 ? `${passedValue}` : ''
     }${value}`;
-    toPass.existingSelectors = existingSelectors.concat(['element']);
-    if (this.isIncorrectOrder('element', toPass.existingSelectors)) {
+    toPass.existingSelectors = existingSelectors.concat([string]);
+    if (obj.isIncorrectOrder(string, toPass.existingSelectors)) {
       throw new Error(
         'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
       );
     }
     return toPass;
+  }
+
+  element(value) {
+    const passedValue = `${value}`;
+    return this.createCheckSelector(this, passedValue, 'element');
   }
 
   id(value) {
-    const passedValue = this.builtString;
-    const { existingSelectors } = this;
-    if (existingSelectors.indexOf('id') >= 0) {
-      throw new Error(
-        'Element, id and pseudo-element should not occur more then one time inside the selector',
-      );
-    }
-    const toPass = new Builder();
-    toPass.builtString = `${passedValue}#${value}`;
-    toPass.existingSelectors = existingSelectors.concat(['id']);
-    if (this.isIncorrectOrder('id', toPass.existingSelectors)) {
-      throw new Error(
-        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
-      );
-    }
-    return toPass;
+    const passedValue = `#${value}`;
+    return this.createCheckSelector(this, passedValue, 'id');
   }
 
   class(value) {
-    const passedValue = this.builtString;
-    const { existingSelectors } = this;
-    const toPass = new Builder();
-    toPass.builtString = `${passedValue}.${value}`;
-    toPass.existingSelectors = existingSelectors.concat(['class']);
-    if (this.isIncorrectOrder('class', toPass.existingSelectors)) {
-      throw new Error(
-        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
-      );
-    }
-    return toPass;
+    const passedValue = `.${value}`;
+    return this.createCheckSelector(this, passedValue, 'class');
   }
 
   attr(value) {
-    const passedValue = this.builtString;
-    const { existingSelectors } = this;
-    const toPass = new Builder();
-    toPass.builtString = `${passedValue}[${value}]`;
-    toPass.existingSelectors = existingSelectors.concat(['attr']);
-    if (this.isIncorrectOrder('attr', toPass.existingSelectors)) {
-      throw new Error(
-        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
-      );
-    }
-    return toPass;
+    const passedValue = `[${value}]`;
+    return this.createCheckSelector(this, passedValue, 'attr');
   }
 
   pseudoClass(value) {
-    const passedValue = this.builtString;
-    const { existingSelectors } = this;
-    const toPass = new Builder();
-    toPass.builtString = `${passedValue}:${value}`;
-    toPass.existingSelectors = existingSelectors.concat(['pseudoClass']);
-    if (this.isIncorrectOrder('pseudoClass', toPass.existingSelectors)) {
-      throw new Error(
-        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
-      );
-    }
-    return toPass;
+    const passedValue = `:${value}`;
+    return this.createCheckSelector(this, passedValue, 'pseudoClass');
   }
 
   pseudoElement(value) {
-    const passedValue = this.builtString;
-    const { existingSelectors } = this;
-    if (existingSelectors.indexOf('pseudoElement') >= 0) {
-      throw new Error(
-        'Element, id and pseudo-element should not occur more then one time inside the selector',
-      );
-    }
-    const toPass = new Builder();
-    toPass.builtString = `${passedValue}::${value}`;
-    toPass.existingSelectors = existingSelectors.concat(['pseudoElement']);
-    if (this.isIncorrectOrder('pseudoElement', toPass.existingSelectors)) {
-      throw new Error(
-        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
-      );
-    }
-    return toPass;
+    const passedValue = `::${value}`;
+    return this.createCheckSelector(this, passedValue, 'pseudoElement');
   }
 
   combine(selector1, combinator, selector2) {
