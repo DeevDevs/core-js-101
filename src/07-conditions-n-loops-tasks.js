@@ -420,8 +420,8 @@ function isBracketsBalanced(str) {
  *    365, 4  => '11231'
  *    365, 10 => '365'
  */
-function toNaryString(/* num, n */) {
-  throw new Error('Not implemented');
+function toNaryString(num, n) {
+  return num.toString(n);
 }
 
 /**
@@ -436,8 +436,18 @@ function toNaryString(/* num, n */) {
  *   ['/web/assets/style.css', '/.bin/mocha',  '/read.me'] => '/'
  *   ['/web/favicon.ico', '/web-scripts/dump', '/verbalizer/logs'] => '/'
  */
-function getCommonDirectoryPath(/* pathes */) {
-  throw new Error('Not implemented');
+function getCommonDirectoryPath(pathes) {
+  const arrOfArrays = pathes.map((str) => str.split('/'));
+  if (arrOfArrays.some((arr) => arr[0] !== '')) return '';
+  const minLength = arrOfArrays.reduce(
+    (minL, array) => (minL > array.length ? array.length : minL),
+    1000,
+  );
+  const finalArr = [];
+  for (let i = 0; i < minLength; i += 1) {
+    if (arrOfArrays.every((arr) => arr[i] === arrOfArrays[0][i])) finalArr.push(arrOfArrays[0][i]);
+  }
+  return `${finalArr.join('/')}/`;
 }
 
 /**
@@ -492,8 +502,21 @@ function getMatrixProduct(/* m1, m2 */) {
  *    [    ,   ,    ]]
  *
  */
-function evaluateTicTacToePosition(/* position */) {
-  throw new Error('Not implemented');
+function evaluateTicTacToePosition(position) {
+  const allLines = [];
+  for (let i = 0; i <= 2; i += 1) {
+    allLines.push(position[i]);
+    allLines.push([position[0][i], position[1][i], position[2][i]]);
+  }
+  allLines.push([position[0][0], position[1][1], position[2][2]]);
+  allLines.push([position[2][0], position[1][1], position[0][2]]);
+  if (
+    allLines.some((arr) => arr[0] === '0' && arr[1] === '0' && arr[2] === '0')
+  ) return '0';
+  if (
+    allLines.some((arr) => arr[0] === 'X' && arr[1] === 'X' && arr[2] === 'X')
+  ) return 'X';
+  return undefined;
 }
 
 module.exports = {
