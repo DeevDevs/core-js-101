@@ -95,17 +95,21 @@ function getFastestPromise(array) {
  *
  */
 function chainPromises(/* array, action */) {
-  // try {
-  //   const result = [];
-  //   for await (const promise of array) {
-  //     const value = await promise.resolve();
-  //     return result.push(value);
+  // async function resolver(arr, index = 0) {
+  //   if (index === arr.length) {
+  //     const finalValue = action(arr);
+  //     return finalValue;
   //   }
-  //   const actionedArray = action(result);
-  //   return actionedArray;
-  // } catch (err) {
-  //   return err.message;
+  //   try {
+  //     const resolved = await arr[index];
+  //     arr.splice(index, 1, resolved);
+  //     return resolver(arr, index + 1);
+  //   } catch (error) {
+  //     arr.splice(index, 1);
+  //     return resolver(arr, index);
+  //   }
   // }
+  // return resolver(array, 0);
   throw new Error('Not implemented');
 }
 
